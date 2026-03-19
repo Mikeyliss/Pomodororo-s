@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Pomodororo's"/>
+<meta name="theme-color" content="#1A1008"/>
+<title>Pomodororo's</title>
+
+<!-- Inline manifest via JS blob — works from local file -->
+
+<script>
+(function(){
+  const manifest = {
+    name: "Pomodororo's",
+    short_name: "Pomodororo's",
+    description: "The Five Pillars of Refined Recovery",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#1A1008",
+    theme_color: "#1A1008",
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%231A1008'/%3E%3Ccircle cx='256' cy='256' r='230' fill='none' stroke='%23C9933A' stroke-width='4'/%3E%3Cpolygon points='256,80 296,176 400,176 316,236 348,336 256,276 164,336 196,236 112,176 216,176' fill='%23C9933A'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest'; link.href = url;
+  document.head.appendChild(link);
+})();
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Cormorant Garamond',Georgia,serif;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;position:relative;overflow:hidden;transition:background 1.2s,background-color 1.2s}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bOuter{0%,100%{transform:scale(.85) rotate(0deg);opacity:.18}50%{transform:scale(1.12) rotate(22.5deg);opacity:.38}}
+@keyframes bMid{0%,100%{transform:scale(.92) rotate(45deg);opacity:.35}50%{transform:scale(1.06) rotate(22.5deg);opacity:.65}}
+@keyframes bCore{0%,100%{transform:scale(.88) rotate(0deg);opacity:.7}50%{transform:scale(1.05) rotate(-15deg);opacity:1}}
+@keyframes bGlow{0%,100%{opacity:.3;transform:scale(.9)}50%{opacity:.7;transform:scale(1.2)}}
+@keyframes dimIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fadeIn .7s ease forwards}
+
+#app{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center}
+.header{text-align:center;margin-bottom:28px}
+.header-sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:6px}
+.header-title{font-size:38px;font-weight:300;letter-spacing:.06em;line-height:1}
+.header-tagline{font-size:12px;margin-top:6px;letter-spacing:.1em;font-style:italic}
+
+/* Install / notif banner */
+#setup-banner{width:100%;border-radius:12px;padding:14px 16px;margin-bottom:16px;border-width:1px;border-style:solid}
+#setup-banner .sb-title{font-size:13px;font-weight:600;letter-spacing:.04em;margin-bottom:6px}
+#setup-banner .sb-body{font-size:12px;font-style:italic;line-height:1.6}
+#setup-banner .sb-steps{font-size:12px;line-height:2;margin-top:8px;padding-left:4px}
+#setup-banner .sb-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.sb-btn-primary{border:none;border-radius:100px;padding:7px 20px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.sb-btn-ghost{background:transparent;border-radius:100px;padding:7px 18px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+
+.pillars{display:flex;flex-direction:column;gap:8px;margin-bottom:24px;width:100%}
+.pillar-card{border-radius:12px;padding:14px 18px;cursor:pointer;text-align:left;width:100%;display:flex;align-items:center;gap:14px;transition:all .3s;background:transparent;font-family:inherit}
+.pillar-roman{font-size:22px;font-style:italic;min-width:28px}
+.pillar-name{font-size:15px;font-weight:600;letter-spacing:.04em}
+.pillar-meta{font-size:11px;margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+
+#bespoke-box{border-radius:12px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
+#bespoke-box label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block}
+#bespoke-box small{font-size:11px;margin-top:4px;font-style:italic;display:block}
+#custom-work{border-radius:8px;padding:6px 12px;font-family:inherit;font-size:16px;width:70px;text-align:center;outline:none}
+
+#start-area{text-align:center;width:100%}
+.hint{margin-top:16px;font-size:11px;letter-spacing:.08em;font-style:italic}
+
+#timer-screen{text-align:center}
+#ring-wrap{position:relative;width:200px;height:200px;margin:0 auto 32px}
+#ring-wrap svg{transform:rotate(-90deg)}
+#ring-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#ring-time span{font-size:46px;font-weight:300;letter-spacing:-.01em;line-height:1}
+#ring-time small{font-size:11px;margin-top:6px;letter-spacing:.14em;text-transform:uppercase}
+.phase-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:24px}
+.subtitle{font-size:13px;font-style:italic;margin-bottom:28px}
+
+#rest-screen{text-align:center}
+#breath-wrap{position:relative;width:180px;height:180px;margin:0 auto}
+#breath-glow{position:absolute;inset:0;border-radius:50%;animation:bGlow 5.5s ease-in-out infinite}
+.b-svg{position:absolute;inset:0;width:100%;height:100%}
+#b-outer{animation:bOuter 5.5s ease-in-out infinite}
+#b-mid{animation:bMid 5.5s ease-in-out infinite}
+#b-core{animation:bCore 5.5s ease-in-out infinite}
+#b-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;animation:bCore 5.5s ease-in-out infinite}
+#rest-time{margin-top:36px}
+#rest-time span{font-size:36px;font-weight:300;letter-spacing:-.01em}
+#rest-time small{font-size:11px;display:block;margin-top:8px;letter-spacing:.12em;text-transform:uppercase}
+.hrv-note{margin-top:28px;padding:12px 24px;border-radius:100px;font-size:12px;font-style:italic;display:inline-block}
+
+.btn-primary{border:none;border-radius:100px;padding:14px 40px;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:opacity .25s,transform .25s}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+.btn-ghost{background:transparent;border-radius:100px;padding:10px 28px;font-family:inherit;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-top:12px;transition:border-color .2s,color .2s}
+
+#hush{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;animation:dimIn 1.8s ease forwards}
+#hush span{font-size:13px;letter-spacing:.18em;text-transform:uppercase}
+
+#footer{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;opacity:.4}
+
+.screen{display:none;width:100%}
+.screen.active{display:flex;flex-direction:column;align-items:center}
+</style>
+
+</head>
+<body>
+
+<div id="hush"><span>Hush —</span></div>
+
+<div id="app">
+  <div class="header">
+    <div class="header-sub" id="hdr-sub"></div>
+    <div class="header-title">Pomodo<span id="hdr-accent">roro</span>'s</div>
+    <div class="header-tagline">The Five Pillars of Refined Recovery</div>
+  </div>
+
+  <div class="screen active fi" id="screen-idle">
+    <div id="setup-banner">
+      <div class="sb-title" id="sb-title"></div>
+      <div class="sb-body" id="sb-body"></div>
+      <div class="sb-steps" id="sb-steps" style="display:none"></div>
+      <div class="sb-actions" id="sb-actions"></div>
+    </div>
+
+```
+<div class="pillars" id="pillar-list"></div>
+
+<div id="bespoke-box" style="display:none">
+  <div>
+    <label>Work Duration</label>
+    <small>Optimal rest: <strong id="rest-preview"></strong></small>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <input type="number" id="custom-work" min="5" max="180" value="45" oninput="updateBespoke()"/>
+    <span style="font-size:12px" id="min-label">min</span>
+  </div>
+</div>
+
+<div id="start-area">
+  <button class="btn-primary" id="begin-btn" onclick="beginWork()">Begin</button>
+  <div class="hint" id="rest-hint"></div>
+</div>
+```
+
+  </div>
+
+  <div class="screen" id="screen-work">
+    <div class="phase-label" id="work-label"></div>
+    <div id="ring-wrap">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle id="ring-track" cx="100" cy="100" r="88" fill="none" stroke-width="2"/>
+        <circle id="ring-prog" cx="100" cy="100" r="88" fill="none" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div id="ring-time"><span id="work-clock">00:00</span><small>remaining</small></div>
+    </div>
+    <div class="subtitle" id="work-subtitle"></div>
+    <button class="btn-ghost" id="early-rest-btn" onclick="endEarly()">End &amp; Rest Early</button>
+    <button class="btn-ghost" id="abandon-btn" onclick="abandon()">Abandon</button>
+  </div>
+
+  <div class="screen" id="screen-rest">
+    <div class="phase-label" id="rest-phase-label">Refined Recovery</div>
+    <div id="breath-wrap">
+      <div id="breath-glow"></div>
+      <svg class="b-svg" id="b-outer" viewBox="0 0 180 180">
+        <polygon id="b-oct" points="90,10 152,38 170,100 152,162 90,170 28,162 10,100 28,38" fill="none" stroke-width="1" opacity=".5"/>
+      </svg>
+      <svg class="b-svg" id="b-mid" viewBox="0 0 180 180">
+        <polygon id="b-dia1" points="90,30 140,90 90,150 40,90" fill="none" stroke-width="1.5" opacity=".7"/>
+        <polygon id="b-dia2" points="90,42 128,90 90,138 52,90" opacity=".07"/>
+      </svg>
+      <svg class="b-svg" id="b-core" viewBox="0 0 180 180">
+        <polygon id="b-star" points="90,55 103,82 132,82 110,100 118,128 90,112 62,128 70,100 48,82 77,82" opacity=".85"/>
+      </svg>
+      <div id="b-dot"></div>
+    </div>
+    <div id="rest-time"><span id="rest-clock">00:00</span><small>breathe</small></div>
+    <div class="hrv-note" id="hrv-note">The breathing asset pulses at your ideal HRV rhythm</div>
+    <button class="btn-ghost" id="skip-rest-btn" onclick="skipRest()">Skip Rest</button>
+  </div>
+</div>
+
+<div id="footer">◆ &nbsp; Diminishing Returns Scale &nbsp; ◆</div>
+
+<script>
+const PILLARS = [
+  { id:1, name:"The Debutante",  subtitle:"Quick, high-energy bursts",   work:15, rest:10, roman:"I",
+    bg:"#FFF8F0", accent:"#F4A336", accentSoft:"#FDE8C4", text:"#2A1A0A", textMuted:"#9B7A52",
+    border:"#F2D9B5", breathColor:"#F4A336", breathGlow:"rgba(244,163,54,0.3)",
+    name2:"Morning Room", grad:"radial-gradient(ellipse at 20% 10%,#FFF0D0 0%,#FFF8F0 60%)" },
+  { id:2, name:"The Sovereign",  subtitle:"Classic balanced power",       work:30, rest:14, roman:"II",
+    bg:"#1A1008", accent:"#C9933A", accentSoft:"#3D2610", text:"#F5E8D0", textMuted:"#9B7A52",
+    border:"#3D2A14", breathColor:"#C9933A", breathGlow:"rgba(201,147,58,0.35)",
+    name2:"Mahogany",     grad:"radial-gradient(ellipse at 80% 90%,#2A1A08 0%,#1A1008 70%)" },
+  { id:3, name:"The Archivist",  subtitle:"Intense, focused research",    work:50, rest:18, roman:"III",
+    bg:"#070E1A", accent:"#4A7FA8", accentSoft:"#0F2035", text:"#D4E5F5", textMuted:"#5A7A9A",
+    border:"#142030", breathColor:"#4A7FA8", breathGlow:"rgba(74,127,168,0.35)",
+    name2:"Oxford Blue",  grad:"radial-gradient(ellipse at 30% 20%,#0E1F35 0%,#070E1A 70%)" },
+  { id:4, name:"The Magnate",    subtitle:"Maximum human flow state",     work:90, rest:24, roman:"IV",
+    bg:"#05120A", accent:"#3A8A5A", accentSoft:"#0A2015", text:"#C8E8D5", textMuted:"#4A7A5A",
+    border:"#102A1A", breathColor:"#3A8A5A", breathGlow:"rgba(58,138,90,0.35)",
+    name2:"Deep Emerald", grad:"radial-gradient(ellipse at 60% 80%,#0A2018 0%,#05120A 70%)" },
+  { id:5, name:"The Bespoke",    subtitle:"User-led, AI-optimized",       work:null, rest:null, roman:"V",
+    bg:"#12100A", accent:"#C8A84A", accentSoft:"#2A2415", text:"#F0E8D0", textMuted:"#8A7A4A",
+    border:"#302A18", breathColor:"#C8A84A", breathGlow:"rgba(200,168,74,0.35)",
+    name2:"Brushed Gold", grad:"radial-gradient(ellipse at 50% 0%,#201C10 0%,#12100A 70%)" },
+];
+
+let current = PILLARS[1];
+let session = 1, phase = "idle", secsLeft = 0, timer = null, audioCtx = null, customWork = 45;
+const CIRC = 2 * Math.PI * 88;
+
+// Detect if running as installed PWA
+const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+function calcRest(w){ return Math.round(5 + Math.sqrt(w) * 2.1); }
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+
+/* ── Audio ── */
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function playHush(){
+  try{
+    const c=getCtx(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);
+    o.frequency.setValueAtTime(196,c.currentTime);
+    o.frequency.exponentialRampToValueAtTime(130,c.currentTime+2.5);
+    g.gain.setValueAtTime(0,c.currentTime);
+    g.gain.linearRampToValueAtTime(0.09,c.currentTime+0.4);
+    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+2.5);
+    o.start(c.currentTime);o.stop(c.currentTime+2.5);
+  }catch(e){}
+}
+function playAlertChime(){
+  try{
+    const c=getCtx();
+    [392,523.25,659.25,783.99].forEach((freq,i)=>{
+      const o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);
+      o.frequency.value=freq;o.type="triangle";
+      const t=c.currentTime+i*0.22;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(0.18,t+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t+1.6);
+      o.start(t);o.stop(t+1.6);
+    });
+  }catch(e){}
+}
+
+/* ── Notifications ── */
+function sendNotif(title,body){
+  if(typeof Notification!=="undefined"&&Notification.permission==="granted"){
+    try{ new Notification(title,{body,icon:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23C9933A'/%3E%3Cpolygon points='32,12 38,26 54,26 41,35 46,50 32,41 18,50 23,35 10,26 26,26' fill='white'/%3E%3C/svg%3E"}); }catch(e){}
+  }
+}
+
+function askNotif(){
+  if(!("Notification" in window)) return;
+  Notification.requestPermission().then(r=>{ renderBanner(); });
+}
+
+/* ── Banner ── */
+function renderBanner(){
+  const p = current;
+  const banner  = document.getElementById("setup-banner");
+  const title   = document.getElementById("sb-title");
+  const body    = document.getElementById("sb-body");
+  const steps   = document.getElementById("sb-steps");
+  const actions = document.getElementById("sb-actions");
+
+  banner.style.background  = p.accentSoft;
+  banner.style.borderColor = p.border;
+  title.style.color  = p.text;
+  body.style.color   = p.textMuted;
+  steps.style.color  = p.textMuted;
+
+  actions.innerHTML = "";
+  steps.style.display = "none";
+
+  function makeBtn(label, primary, onclick){
+    const btn = document.createElement("button");
+    btn.textContent = label;
+    btn.className = primary ? "sb-btn-primary" : "sb-btn-ghost";
+    if(primary){ btn.style.background=p.accent; btn.style.color=p.bg; }
+    else { btn.style.border="1px solid "+p.border; btn.style.color=p.textMuted; }
+    btn.onclick = onclick;
+    actions.appendChild(btn);
+  }
+
+  // Case 1 — already a PWA and permission granted
+  if(isPWA && typeof Notification!=="undefined" && Notification.permission==="granted"){
+    title.textContent = "✓ Notifications active";
+    body.textContent  = "You'll be alerted when timers end, even if your screen sleeps.";
+    makeBtn("Dismiss", false, ()=>{ banner.style.display="none"; });
+    return;
+  }
+
+  // Case 2 — running as PWA but not yet asked
+  if(isPWA && typeof Notification!=="undefined" && Notification.permission==="default"){
+    title.textContent = "One last step";
+    body.textContent  = "Tap Allow to enable timer notifications.";
+    makeBtn("Allow Notifications", true, askNotif);
+    return;
+  }
+
+  // Case 3 — running as PWA but denied
+  if(isPWA && typeof Notification!=="undefined" && Notification.permission==="denied"){
+    title.textContent = "Notifications blocked";
+    body.textContent  = "Go to Settings → Notifications → Pomodororo's and enable them. Or rely on the chime alert.";
+    makeBtn("Got it", false, ()=>{ banner.style.display="none"; });
+    return;
+  }
+
+  // Case 4 — NOT a PWA yet (opened from browser tab / file)
+  // Show Add to Home Screen instructions
+  title.textContent = "Add to Home Screen for notifications";
+  body.textContent  = "iOS requires this app to be on your Home Screen before notifications work. It only takes 10 seconds:";
+  steps.style.display = "block";
+  steps.innerHTML =
+    "1. Tap the <strong style='color:"+p.text+"'>Share</strong> button (□↑) at the bottom of Edge<br>"+
+    "2. Scroll down and tap <strong style='color:"+p.text+"'>Add to Home Screen</strong><br>"+
+    "3. Tap <strong style='color:"+p.text+"'>Add</strong> — then open the app from your Home Screen<br>"+
+    "4. Tap Allow when the notification prompt appears";
+  makeBtn("I've added it — Allow", true, askNotif);
+  makeBtn("Skip for now", false, ()=>{ banner.style.display="none"; });
+}
+
+/* ── Theme ── */
+function applyTheme(p){
+  document.body.style.background = p.grad;
+  document.body.style.backgroundColor = p.bg;
+  document.body.style.color = p.text;
+  document.getElementById("hdr-sub").style.color = p.textMuted;
+  document.getElementById("hdr-sub").textContent = p.name2+" · Session "+session;
+  document.getElementById("hdr-accent").style.color = p.accent;
+  document.querySelector(".header-tagline").style.color = p.textMuted;
+
+  const bb=document.getElementById("bespoke-box");
+  bb.style.background=p.accentSoft; bb.style.border="1px solid "+p.border;
+  document.getElementById("rest-preview").style.color=p.accent;
+  document.getElementById("min-label").style.color=p.textMuted;
+  const ci=document.getElementById("custom-work");
+  ci.style.background=p.accentSoft; ci.style.border="1px solid "+p.border; ci.style.color=p.text;
+
+  const bb2=document.getElementById("begin-btn");
+  bb2.style.background=p.accent; bb2.style.color=p.bg;
+  document.getElementById("rest-hint").style.color=p.textMuted;
+
+  renderPillars();
+  renderBanner();
+
+  document.getElementById("ring-track").style.stroke=p.accentSoft;
+  document.getElementById("ring-prog").style.stroke=p.accent;
+  document.getElementById("work-clock").style.color=p.text;
+  document.getElementById("ring-time").querySelector("small").style.color=p.textMuted;
+  document.getElementById("work-label").style.color=p.accent;
+  document.getElementById("work-subtitle").style.color=p.textMuted;
+
+  document.querySelectorAll(".btn-ghost").forEach(el=>{
+    el.style.color=p.textMuted; el.style.border="1px solid "+p.border;
+  });
+
+  document.getElementById("breath-glow").style.background="radial-gradient(circle,"+p.breathGlow+" 0%,transparent 70%)";
+  document.getElementById("b-oct").setAttribute("stroke",p.breathColor);
+  document.getElementById("b-dia1").setAttribute("stroke",p.breathColor);
+  document.getElementById("b-dia2").setAttribute("fill",p.breathColor);
+  document.getElementById("b-star").setAttribute("fill",p.breathColor);
+  document.getElementById("b-dot").style.background=p.breathColor;
+  document.getElementById("b-dot").style.boxShadow="0 0 12px 4px "+p.breathGlow;
+  document.getElementById("rest-phase-label").style.color=p.accent;
+  document.getElementById("rest-clock").style.color=p.text;
+  document.getElementById("rest-time").querySelector("small").style.color=p.textMuted;
+  document.getElementById("hrv-note").style.color=p.textMuted;
+  document.getElementById("hrv-note").style.border="1px solid "+p.border;
+  document.getElementById("hush").style.background=p.bg;
+  document.getElementById("hush").querySelector("span").style.color=p.textMuted;
+  document.getElementById("footer").style.color=p.textMuted;
+}
+
+function renderPillars(){
+  const p=current;
+  const list=document.getElementById("pillar-list");
+  list.innerHTML="";
+  PILLARS.forEach(pl=>{
+    const sel=pl.id===p.id;
+    const card=document.createElement("button");
+    card.className="pillar-card";
+    card.style.background=sel?p.accentSoft:"transparent";
+    card.style.border="1px solid "+(sel?p.accent:p.border);
+    card.innerHTML=`<span class="pillar-roman" style="color:${p.accent};opacity:${sel?1:.6}">${pl.roman}</span>
+      <div>
+        <div class="pillar-name" style="color:${p.text}">${pl.name}</div>
+        <div class="pillar-meta" style="color:${p.textMuted}">${pl.work?pl.work+"m work · "+pl.rest+"m rest":"Custom"}</div>
+      </div>`;
+    card.onclick=()=>selectPillar(pl);
+    list.appendChild(card);
+  });
+}
+
+function selectPillar(p){ current=p; applyTheme(p); updateStartArea(); document.getElementById("bespoke-box").style.display=p.id===5?"flex":"none"; }
+
+function updateStartArea(){
+  const wm=current.id===5?customWork:current.work;
+  const rm=current.id===5?calcRest(customWork):current.rest;
+  document.getElementById("begin-btn").textContent="Begin · "+wm+"m";
+  document.getElementById("rest-hint").textContent="Rest follows automatically — "+rm+" minutes of Refined Recovery";
+}
+
+function updateBespoke(){
+  customWork=Math.max(5,Math.min(180,parseInt(document.getElementById("custom-work").value)||45));
+  document.getElementById("rest-preview").textContent=calcRest(customWork)+" min";
+  updateStartArea();
+}
+
+function setRing(prog){ const d=CIRC*prog; document.getElementById("ring-prog").style.strokeDasharray=d+" "+(CIRC-d); }
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  const sc=document.getElementById("screen-"+id);
+  sc.classList.add("active"); sc.classList.remove("fi"); void sc.offsetWidth; sc.classList.add("fi");
+}
+
+/* ── Wall-clock state ── 
+   Instead of counting down a variable, we store the absolute end timestamp.
+   On every tick (and on visibility change) we compute remaining = endAt - Date.now().
+   This means locking the screen, switching apps, or any suspension
+   does NOT corrupt the timer — we always know the truth from the clock.
+*/
+let endAt = null; // ms timestamp when current phase ends
+
+function saveState(){
+  try {
+    sessionStorage.setItem("pomo", JSON.stringify({
+      phase, endAt, session,
+      pillarId: current.id,
+      customWork,
+    }));
+  } catch(e){}
+}
+
+function clearState(){ try{ sessionStorage.removeItem("pomo"); }catch(e){} }
+
+function computeSecsLeft(){
+  if(!endAt) return 0;
+  return Math.max(0, Math.round((endAt - Date.now()) / 1000));
+}
+
+function tick(){
+  const s = computeSecsLeft();
+  if(s <= 0){
+    clearInterval(timer);
+    if(phase==="work") transitionToRest();
+    else finishRest();
+    return;
+  }
+  secsLeft = s;
+  if(phase==="work"){
+    document.getElementById("work-clock").textContent = fmt(s);
+    setRing(1 - s / ((current.id===5 ? customWork : current.work) * 60));
+    document.title = "⏱ " + fmt(s) + " · " + current.name;
+  } else {
+    document.getElementById("rest-clock").textContent = fmt(s);
+    document.title = "🌿 " + fmt(s) + " · Rest";
+  }
+}
+
+/* When user returns to the app, immediately reconcile elapsed time */
+function onVisibilityChange(){
+  if(document.visibilityState !== "visible") return;
+  if(phase !== "work" && phase !== "rest") return;
+  const s = computeSecsLeft();
+  if(s <= 0){
+    clearInterval(timer);
+    if(phase==="work") transitionToRest();
+    else finishRest();
+  } else {
+    // Snap UI to correct position instantly
+    secsLeft = s;
+    tick();
+  }
+}
+document.addEventListener("visibilitychange", onVisibilityChange);
+
+function startTicker(){
+  clearInterval(timer);
+  timer = setInterval(tick, 1000);
+}
+
+function beginWork(){
+  phase = "work";
+  const wm = current.id===5 ? customWork : current.work;
+  endAt = Date.now() + wm * 60 * 1000;
+  secsLeft = wm * 60;
+  document.getElementById("work-label").textContent = current.roman+". "+current.name+" · Work";
+  document.getElementById("work-subtitle").textContent = current.subtitle;
+  document.getElementById("work-clock").textContent = fmt(secsLeft);
+  setRing(0); showScreen("work");
+  saveState(); startTicker();
+}
+
+function endEarly(){ clearInterval(timer); transitionToRest(); }
+
+function abandon(){
+  clearInterval(timer); clearState();
+  phase="idle"; endAt=null; document.title="Pomodororo's"; showScreen("idle");
+}
+
+function transitionToRest(){
+  playAlertChime(); playHush();
+  const rm = current.id===5 ? calcRest(customWork) : current.rest;
+  sendNotif("Pomodororo's — Hush ◆", "Work complete. "+rm+" min of Refined Recovery begins.");
+  const hush = document.getElementById("hush"); hush.style.display="flex";
+  setTimeout(()=>{
+    hush.style.display="none";
+    phase = "rest";
+    endAt = Date.now() + rm * 60 * 1000;
+    secsLeft = rm * 60;
+    document.getElementById("rest-clock").textContent = fmt(secsLeft);
+    showScreen("rest"); saveState(); startTicker();
+  }, 1800);
+}
+
+function finishRest(){
+  playAlertChime(); playHush();
+  sendNotif("Pomodororo's — Ready ◆", "Recovery complete. Return when you are.");
+  clearState();
+  session++; phase="idle"; endAt=null; document.title="Pomodororo's";
+  document.getElementById("hdr-sub").textContent = current.name2+" · Session "+session;
+  showScreen("idle");
+}
+
+function skipRest(){ clearInterval(timer); finishRest(); }
+
+/* ── Resume from sessionStorage on page load ── */
+function tryResume(){
+  try{
+    const raw = sessionStorage.getItem("pomo");
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(!s.endAt || !s.phase || s.phase==="idle") return false;
+
+    // Restore pillar
+    const pl = PILLARS.find(p=>p.id===s.pillarId);
+    if(pl){ current=pl; customWork=s.customWork||45; }
+    session = s.session || 1;
+    phase = s.phase;
+    endAt = s.endAt;
+    applyTheme(current);
+    updateStartArea(); updateBespoke();
+
+    const remaining = computeSecsLeft();
+
+    if(remaining <= 0){
+      // Timer already expired while phone was locked — fire immediately
+      if(phase==="work") transitionToRest();
+      else finishRest();
+      return true;
+    }
+
+    secsLeft = remaining;
+
+    if(phase==="work"){
+      document.getElementById("work-label").textContent = current.roman+". "+current.name+" · Work";
+      document.getElementById("work-subtitle").textContent = current.subtitle;
+      document.getElementById("work-clock").textContent = fmt(secsLeft);
+      setRing(1 - secsLeft / ((current.id===5?customWork:current.work)*60));
+      showScreen("work");
+    } else {
+      document.getElementById("rest-clock").textContent = fmt(secsLeft);
+      showScreen("rest");
+    }
+    startTicker();
+    return true;
+  } catch(e){ return false; }
+}
+
+/* ── Init ── */
+(function(){
+  const rp = document.getElementById("ring-prog");
+  rp.style.strokeDasharray = "0 "+CIRC;
+  rp.style.transition = "stroke-dasharray .9s linear";
+
+  if(!tryResume()){
+    applyTheme(current);
+    updateStartArea(); updateBespoke();
+  }
+})();
+</script>
+
+</body>
+</html>
